@@ -3,6 +3,10 @@
   "name": "Video RAG Tutor",
   "version": "1.0",
   "description": "Tutor de IA que acompanha seus vídeos do YouTube com consciência temporal.",
+  "action": {},
+  "background": {
+    "service_worker": "background.js"
+  },
   "permissions": [
     "activeTab",
     "storage"

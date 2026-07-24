@@ -1,3 +1,5 @@
+console.log("Video RAG Tutor: Script injetado na página!");
+
 const API_URL = "http://localhost:8000";
 let currentVideoId = null;
 let currentTaskId = null;
@@ -5,6 +7,11 @@ let isReady = false;
 
 // Helper to inject the UI
 function injectUI() {
+    if (document.getElementById('vrag-tutor-container')) {
+        return;
+    }
+    
+    console.log("Video RAG Tutor: Construindo interface...");
     if (document.getElementById('vrag-tutor-container')) return;
 
     const container = document.createElement('div');
@@ -13,7 +20,11 @@ function injectUI() {
     container.innerHTML = `
         <div id="vrag-header">
             <h3>Video RAG Tutor</h3>
-            <button id="vrag-process-btn">Processar Vídeo</button>
+            <div id="vrag-controls">
+                <button id="vrag-process-btn">Processar</button>
+                <button id="vrag-collapse-btn" title="Recolher/Expandir">&#8211;</button>
+                <button id="vrag-close-btn" title="Fechar Tutor">&#10005;</button>
+            </div>
         </div>
         <div id="vrag-chat-area">
             <div class="vrag-message bot">Olá! Clique em processar para extrair e estudar este vídeo.</div>
@@ -31,10 +42,33 @@ function injectUI() {
 function attachListeners() {
     document.getElementById('vrag-process-btn').addEventListener('click', startProcessing);
     document.getElementById('vrag-send-btn').addEventListener('click', sendMessage);
+    
+    // Botão de Recolher
+    document.getElementById('vrag-collapse-btn').addEventListener('click', () => {
+        document.getElementById('vrag-tutor-container').classList.toggle('vrag-collapsed');
+    });
+
+    // Botão de Fechar
+    document.getElementById('vrag-close-btn').addEventListener('click', () => {
+        document.getElementById('vrag-tutor-container').remove();
+    });
+
     document.getElementById('vrag-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
 }
+
+// Escuta a requisição vinda do background.js (quando clica no ícone da extensão)
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "toggle_vrag_tutor") {
+        const existing = document.getElementById('vrag-tutor-container');
+        if (existing) {
+            existing.remove(); // Fecha se já estiver aberto
+        } else {
+            injectUI(); // Abre se estiver fechado
+        }
+    }
+});
 
 function addMessage(text, sender, timeText = "") {
     const chatArea = document.getElementById('vrag-chat-area');
@@ -164,11 +198,21 @@ async function sendMessage() {
     }
 }
 
-// YouTube usa navegação SPA (Single Page Application), precisamos ouvir o evento deles
+// YouTube usa navegação SPA, precisamos ouvir o evento deles
 document.addEventListener('yt-navigate-finish', () => {
-    isReady = false; // reseta pra novo vídeo
+    console.log("Video RAG Tutor: Navegação SPA detectada.");
+    isReady = false;
     injectUI();
 });
 
-// Tenta injetar logo de cara caso seja loading direto da URL
-setTimeout(injectUI, 2000);
+// Tenta injetar com tentativas repetidas caso o DOM do Youtube esteja lento
+let attempts = 0;
+const interval = setInterval(() => {
+    if (document.getElementById('vrag-tutor-container')) {
+        clearInterval(interval);
+    } else {
+        injectUI();
+        attempts++;
+        if (attempts > 10) clearInterval(interval);
+    }
+}, 1000);
