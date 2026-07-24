@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+yt-dlp
+faster-whisper
+chromadb
+langchain-community
+langchain-ollama
+pydantic

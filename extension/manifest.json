@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Video RAG Tutor",
+  "version": "1.0",
+  "description": "Tutor de IA que acompanha seus vídeos do YouTube com consciência temporal.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "*://*.youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/watch*"],
+      "js": ["content.js"],
+      "css": ["style.css"]
+    }
+  ]
+}
