@@ -80,8 +80,15 @@ function addMessage(text, sender, timeText = "") {
         content += `<span class="vrag-timestamp">${timeText}</span>`;
     }
     
-    // Tratamento rudimentar de markdown bold
+    // Tratamento de markdown básico
     text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    text = text.replace(/^### (.*$)/gim, '<h4>$1</h4>');
+    text = text.replace(/^## (.*$)/gim, '<h3>$1</h3>');
+    text = text.replace(/^# (.*$)/gim, '<h2>$1</h2>');
+    text = text.replace(/^\* (.*$)/gim, '<li>$1</li>');
+    text = text.replace(/^- (.*$)/gim, '<li>$1</li>');
+    text = text.replace(/\n/g, '<br>');
+    
     content += text;
     
     msg.innerHTML = content;
