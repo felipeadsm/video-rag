@@ -13,13 +13,13 @@ services:
     depends_on:
       - ollama
     # Descomente o bloco abaixo caso tenha GPU NVIDIA e queira acelerar o Whisper
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   ollama:
     image: ollama/ollama
@@ -28,13 +28,13 @@ services:
     volumes:
       - ollama_models:/root/.ollama
     # Descomente o bloco abaixo caso tenha GPU NVIDIA e queira acelerar o Ollama
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 volumes:
   chromadata:

@@ -1,7 +1,7 @@
 import os
 import chromadb
 
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
 # Inicializa o ChromaDB com persistência na pasta do volume Docker
@@ -10,7 +10,7 @@ chroma_client = chromadb.PersistentClient(path="/app/chromadata")
 # Inicializa o LLM via Ollama. 
 # O base_url é configurado via var de ambiente no docker-compose (apontando pro container do ollama)
 ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-llm = Ollama(model="llama3", base_url=ollama_host) 
+llm = OllamaLLM(model="llama3", base_url=ollama_host) 
 
 def add_to_vector_db(video_id: str, segments: list):
     """
@@ -37,6 +37,14 @@ def add_to_vector_db(video_id: str, segments: list):
             ids=ids
         )
 
+def is_video_processed(video_id: str) -> bool:
+    """Verifica se o vídeo já foi indexado no banco vetorial."""
+    try:
+        collection = chroma_client.get_collection(name=f"video_{video_id}")
+        return collection.count() > 0
+    except Exception:
+        return False
+
 def query_rag(video_id: str, query: str, current_time: float | None = None) -> str:
     """
     Consulta o LLM com base na transcrição.
@@ -44,7 +52,7 @@ def query_rag(video_id: str, query: str, current_time: float | None = None) -> s
     """
     try:
         collection = chroma_client.get_collection(name=f"video_{video_id}")
-    except ValueError:
+    except Exception:
         return "Desculpe, não encontrei a base de dados para este vídeo. O processamento já terminou?"
     
     context = ""
@@ -84,11 +92,16 @@ def query_rag(video_id: str, query: str, current_time: float | None = None) -> s
             
     # Prompt do Tutor Especialista (Enriquecimento)
     prompt = PromptTemplate.from_template(
-        "Você é um tutor especialista altamente didático. Use o trecho da transcrição do vídeo fornecida como base para responder a pergunta do aluno.\n"
-        "O aluno está estudando este vídeo. Não se limite apenas ao texto fornecido; enriqueça a explicação trazendo contexto histórico, exemplos práticos e clareza, mas mantenha o vínculo com o assunto principal do vídeo.\n\n"
+        "Você é um tutor especialista altamente didático. Sua missão é responder à pergunta do aluno com base no trecho da transcrição do vídeo fornecido.\n\n"
+        "Diretrizes:\n"
+        "1. Baseie-se primeiramente no 'TRECHO DO VÍDEO' para a sua resposta.\n"
+        "2. Se o trecho não contiver a informação necessária, avise o aluno, mas tente ajudar usando seus conhecimentos gerais.\n"
+        "3. Enriqueça a explicação com exemplos práticos, analogias e contexto relevante (evite se restringir apenas a 'contexto histórico', a não ser que faça sentido).\n"
+        "4. Formate sua resposta em Markdown, utilizando negrito, listas e parágrafos curtos para facilitar a leitura.\n"
+        "5. Responda sempre de forma encorajadora e em Português do Brasil.\n\n"
         "TRECHO DO VÍDEO:\n{context}\n\n"
         "PERGUNTA DO ALUNO: {query}\n\n"
-        "SUA EXPLICAÇÃO DIDÁTICA E ENRIQUECEDORA:"
+        "SUA EXPLICAÇÃO:"
     )
     
     formatted_prompt = prompt.format(context=context, query=query)

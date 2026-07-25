@@ -1,5 +1,15 @@
 import uuid
 import yt_dlp
+import re
+
+def extract_video_id(url: str) -> str | None:
+    """
+    Extrai o ID do vídeo do YouTube a partir da URL usando regex.
+    """
+    match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|\/|$)", url)
+    if match:
+        return match.group(1)
+    return None
 
 def download_audio(url: str) -> tuple[str, str]:
     """
