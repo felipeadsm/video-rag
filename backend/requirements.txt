@@ -6,3 +6,5 @@ chromadb
 langchain-community
 langchain-ollama
 pydantic
+nvidia-cublas-cu12
+nvidia-cudnn-cu12

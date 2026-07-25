@@ -1,8 +1,8 @@
 from faster_whisper import WhisperModel
 
 # Inicializamos o modelo globalmente para não recarregar em toda requisição
-# Dependendo da sua máquina, se tiver GPU NVIDIA, altere device para "cuda" e compute_type para "float16"
-model = WhisperModel("base", device="cpu", compute_type="int8")
+# GPU NVIDIA detectada, ativando suporte a CUDA e float16 para máximo desempenho
+model = WhisperModel("base", device="cuda", compute_type="float16")
 
 def transcribe_audio(audio_path: str):
     """

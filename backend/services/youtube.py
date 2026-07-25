@@ -16,9 +16,13 @@ def download_audio(url: str) -> tuple[str, str]:
     Downloads the audio from a YouTube video using yt-dlp.
     Returns a tuple: (path_to_audio_file, video_id)
     """
+    # Garante que usaremos apenas a URL do vídeo específico (sem os parâmetros &list=)
+    extracted_id = extract_video_id(url)
+    clean_url = f"https://www.youtube.com/watch?v={extracted_id}" if extracted_id else url
+
     # Recupera metadados do vídeo primeiro para pegar o ID
-    with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
-        info_dict = ydl.extract_info(url, download=False)
+    with yt_dlp.YoutubeDL({'quiet': True, 'noplaylist': True}) as ydl:
+        info_dict = ydl.extract_info(clean_url, download=False)
         video_id = info_dict.get("id", str(uuid.uuid4()))
     
     output_path = f"/tmp/{video_id}.wav"
@@ -32,10 +36,11 @@ def download_audio(url: str) -> tuple[str, str]:
         }],
         'outtmpl': f'/tmp/{video_id}.%(ext)s',
         'quiet': True,
-        'no_warnings': True
+        'no_warnings': True,
+        'noplaylist': True
     }
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        ydl.download([clean_url])
         
     return output_path, video_id

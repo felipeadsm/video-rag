@@ -40,22 +40,32 @@ def process_video_task(task_id: str, url: str, video_id: str):
     """
     Tarefa em background que orquestra o pipeline de ingestão, transcrição e indexação.
     """
+    print(f"\n[🚀 INÍCIO] Iniciando processamento do vídeo: {video_id}")
     try:
+        print(f"[⬇️ DOWNLOAD] Baixando áudio do YouTube...")
         processing_status[task_id] = {"status": "downloading", "video_id": video_id}
         audio_path, _ = download_audio(url)
+        print(f"[✅ DOWNLOAD] Download concluído: {audio_path}")
         
+        print(f"[🎙️ WHISPER] Iniciando transcrição de áudio...")
         processing_status[task_id] = {"status": "transcribing", "video_id": video_id}
         segments = transcribe_audio(audio_path)
+        print(f"[✅ WHISPER] Transcrição concluída! Segmentos gerados: {len(segments)}")
         
+        print(f"[🧠 VECTOR DB] Iniciando indexação no ChromaDB...")
         processing_status[task_id] = {"status": "vectorizing", "video_id": video_id}
         add_to_vector_db(video_id, segments)
+        print(f"[✅ VECTOR DB] Indexação concluída para o vídeo {video_id}!")
         
         # Limpeza do arquivo de áudio temporário após a indexação
         if os.path.exists(audio_path):
             os.remove(audio_path)
+            print(f"[🗑️ CLEANUP] Arquivo temporário removido: {audio_path}")
             
         processing_status[task_id] = {"status": "completed", "video_id": video_id}
+        print(f"[🎉 SUCESSO] Processamento do vídeo {video_id} finalizado com sucesso!\n")
     except Exception as e:
+        print(f"[❌ ERRO] Falha no processamento do vídeo {video_id}: {str(e)}\n")
         processing_status[task_id] = {"status": "failed", "error": str(e), "video_id": video_id}
     finally:
         if video_id in active_processing_videos:
@@ -70,7 +80,11 @@ async def process_video(request: ProcessRequest, background_tasks: BackgroundTas
         
     # 1. Verifica se já está indexado no banco vetorial
     if is_video_processed(video_id):
-        return {"task_id": "already_processed", "status": "completed", "video_id": video_id}
+        print(f"[⏭️ SKIP] Vídeo {video_id} já estava processado no banco!")
+        # Cria uma task falsa completa para o frontend conseguir pegar o video_id no poll
+        pseudo_task_id = str(uuid.uuid4())
+        processing_status[pseudo_task_id] = {"status": "completed", "video_id": video_id}
+        return {"task_id": pseudo_task_id, "status": "completed", "video_id": video_id}
         
     # 2. Verifica se já está sendo processado no momento por outra requisição
     if video_id in active_processing_videos:
@@ -88,8 +102,6 @@ async def process_video(request: ProcessRequest, background_tasks: BackgroundTas
 
 @app.get("/status/{task_id}")
 async def get_status(task_id: str):
-    if task_id == "already_processed":
-        return {"status": "completed"}
     if task_id not in processing_status:
         raise HTTPException(status_code=404, detail="Task not found")
     return processing_status[task_id]
