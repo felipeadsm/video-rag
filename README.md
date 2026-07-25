@@ -11,6 +11,7 @@
 - **Consciência Temporal ("O Durante"):** O tutor sabe exatamente em qual segundo do vídeo você está. Faça uma pergunta aos 10:15 e ele analisará cirurgicamente a janela de contexto daquele exato momento (um raio de 60 segundos), focando exclusivamente no assunto atual da aula.
 - **Busca Global Vetorial ("O Depois"):** Pause o vídeo e faça perguntas abrangentes. A IA vasculha a transcrição inteira usando *Retrieval-Augmented Generation (RAG)* para conectar informações e formular uma resposta coesa.
 - **Cérebro Multilíngue:** O sistema utiliza o poderoso modelo de embeddings `paraphrase-multilingual-MiniLM-L12-v2` nativamente no ChromaDB, garantindo alta precisão semântica para aulas em **Português do Brasil**.
+- **Modelos de IA Customizáveis (On-the-fly):** Não fique preso a um único LLM! A interface da extensão possui um seletor que permite alterar a IA que vai responder sua pergunta (ex: alternar entre `llama3`, `phi3` ou `gemma2`) no meio da aula, sem precisar reiniciar o sistema.
 - **Histórico Persistente:** Fechou a aba por engano? Mudou de vídeo? A extensão usa `chrome.storage.local` para salvar as suas conversas atreladas ao ID de cada vídeo. Suas sessões de estudo nunca são perdidas.
 - **Experiência Nativa:** Interface limpa em *glassmorphism* (fundo translúcido escuro) que se adapta perfeitamente ao layout do YouTube. Suporte completo a formatação Markdown profissional via `marked.js`.
 
@@ -41,7 +42,7 @@ docker-compose up --build
 
 Se for o seu primeiro acesso, abra outro terminal e baixe o modelo Llama 3 no Ollama:
 ```bash
-docker exec -it video-rag-ollama-1 ollama run llama3
+docker exec -it video-rag-ollama-1 ollama pull llama3
 ```
 *(Dica: ajuste o nome do container `video-rag-ollama-1` caso o seu docker-compose o nomeie diferente).*
 
@@ -50,10 +51,11 @@ docker exec -it video-rag-ollama-1 ollama run llama3
 2. Ative a chave **Modo do Desenvolvedor** no canto inferior ou superior direito (dependendo do navegador).
 3. Clique em **Carregar sem compactação** (Load Unpacked) e selecione a pasta `extension/` deste repositório.
 
-### 3. Turbine o YouTube
+### 3. Melhore seu YouTube
 1. Acesse qualquer vídeo no YouTube. O painel lateral escuro aparecerá automaticamente.
 2. Clique em **Processar** e acompanhe o log pelo console do seu Docker (Você verá métricas em tempo real (Timeperf) da ingestão, whisper e banco de dados).
-3. Faça suas perguntas e bons estudos!
+3. (Opcional) Digite o nome do modelo desejado na caixinha do cabeçalho da extensão (o padrão é `llama3`). Lembre-se que você precisa baixar o modelo desejado no Ollama primeiro, usando `docker exec -it video-rag-ollama-1 ollama pull <nome_do_modelo>`.
+4. Faça suas perguntas e bons estudos!
 
 ---
 *Construído para acelerar o seu ritmo de aprendizado com Inteligência Artificial.*

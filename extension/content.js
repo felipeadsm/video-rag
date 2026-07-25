@@ -21,6 +21,7 @@ function injectUI() {
         <div id="vrag-header">
             <h3>Video RAG Tutor</h3>
             <div id="vrag-controls">
+                <input type="text" id="vrag-model-input" value="llama3" title="Modelo Ollama (ex: llama3, phi3)" />
                 <button id="vrag-process-btn">Processar</button>
                 <button id="vrag-collapse-btn" title="Recolher/Expandir">&#8211;</button>
                 <button id="vrag-close-btn" title="Fechar Tutor">&#10005;</button>
@@ -227,6 +228,8 @@ async function sendMessage() {
     chatArea.appendChild(msg);
     chatArea.scrollTop = chatArea.scrollHeight;
 
+    const modelName = document.getElementById('vrag-model-input').value.trim() || "llama3";
+    
     try {
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
@@ -234,7 +237,8 @@ async function sendMessage() {
             body: JSON.stringify({
                 video_id: currentVideoId,
                 query: text,
-                current_time: currentTime // Se null, backend faz Busca Global
+                current_time: currentTime,
+                model_name: modelName
             })
         });
         

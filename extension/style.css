@@ -2,7 +2,7 @@
     position: fixed;
     top: 60px;
     right: 20px;
-    width: 350px;
+    width: 400px;
     height: calc(100vh - 100px);
     background: rgba(15, 15, 15, 0.95);
     backdrop-filter: blur(10px);
@@ -30,6 +30,22 @@
     background: linear-gradient(90deg, #ff0050, #00f2fe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+#vrag-model-input {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px;
+    border-radius: 4px;
+    width: 60px;
+    font-size: 11px;
+    text-align: center;
+    outline: none;
+}
+
+#vrag-model-input:focus {
+    border-color: #00f2fe;
 }
 
 #vrag-process-btn {

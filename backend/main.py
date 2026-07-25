@@ -36,6 +36,7 @@ class ChatRequest(BaseModel):
     video_id: str
     query: str
     current_time: float | None = None
+    model_name: str = "llama3"
 
 def process_video_task(task_id: str, url: str, video_id: str):
     """
@@ -120,5 +121,5 @@ async def get_status(task_id: str):
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    response = query_rag(request.video_id, request.query, request.current_time)
+    response = query_rag(request.video_id, request.query, request.current_time, request.model_name)
     return {"response": response}

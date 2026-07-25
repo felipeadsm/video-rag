@@ -17,10 +17,9 @@ embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name="paraphrase-multilingual-MiniLM-L12-v2"
 )
 
-# Inicializa o LLM via Ollama. 
-# O base_url é configurado via var de ambiente no docker-compose (apontando pro container do ollama)
+# A instância do OllamaLLM não será mais global, será criada dinamicamente na hora da query
+# para permitir customização de modelo no frontend
 ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-llm = OllamaLLM(model="llama3", base_url=ollama_host) 
 
 def add_to_vector_db(video_id: str, segments: list):
     """
@@ -59,9 +58,9 @@ def is_video_processed(video_id: str) -> bool:
     except Exception:
         return False
 
-def query_rag(video_id: str, query: str, current_time: float | None = None) -> str:
+def query_rag(video_id: str, query: str, current_time: float | None = None, model_name: str = "llama3") -> str:
     """
-    Consulta o LLM com base na transcrição.
+    Consulta o LLM com base na transcrição usando um modelo customizado.
     Implementa a lógica do "Durante" (Sliding Window) vs "Depois" (Busca Global).
     """
     try:
@@ -122,6 +121,9 @@ def query_rag(video_id: str, query: str, current_time: float | None = None) -> s
     )
     
     formatted_prompt = prompt.format(context=context, query=query)
+    
+    # Instancia o modelo selecionado pelo usuário dinamicamente
+    llm = OllamaLLM(model=model_name, base_url=ollama_host)
     
     # Chama o Ollama localmente
     response = llm.invoke(formatted_prompt)
