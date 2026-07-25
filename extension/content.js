@@ -37,6 +37,7 @@ function injectUI() {
 
     document.body.appendChild(container);
     attachListeners();
+    loadChatHistory();
 }
 
 function attachListeners() {
@@ -70,7 +71,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-function addMessage(text, sender, timeText = "") {
+function addMessage(text, sender, timeText = "", save = true) {
     const chatArea = document.getElementById('vrag-chat-area');
     const msg = document.createElement('div');
     msg.className = `vrag-message ${sender}`;
@@ -80,20 +81,61 @@ function addMessage(text, sender, timeText = "") {
         content += `<span class="vrag-timestamp">${timeText}</span>`;
     }
     
-    // Tratamento de markdown básico
-    text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-    text = text.replace(/^### (.*$)/gim, '<h4>$1</h4>');
-    text = text.replace(/^## (.*$)/gim, '<h3>$1</h3>');
-    text = text.replace(/^# (.*$)/gim, '<h2>$1</h2>');
-    text = text.replace(/^\* (.*$)/gim, '<li>$1</li>');
-    text = text.replace(/^- (.*$)/gim, '<li>$1</li>');
-    text = text.replace(/\n/g, '<br>');
+    // Tratamento de markdown via library "marked"
+    if (typeof marked !== 'undefined') {
+        text = marked.parse(text);
+    }
     
     content += text;
     
     msg.innerHTML = content;
     chatArea.appendChild(msg);
     chatArea.scrollTop = chatArea.scrollHeight;
+    
+    if (save) {
+        saveMessageToHistory({ text, sender, timeText });
+    }
+}
+
+function getUrlVideoId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('v');
+}
+
+function saveMessageToHistory(messageObj) {
+    const vId = getUrlVideoId();
+    if (!vId) return;
+    
+    chrome.storage.local.get([`chat_history_${vId}`], (result) => {
+        let history = result[`chat_history_${vId}`] || [];
+        history.push(messageObj);
+        chrome.storage.local.set({ [`chat_history_${vId}`]: history });
+    });
+}
+
+function loadChatHistory() {
+    const vId = getUrlVideoId();
+    if (!vId) return;
+    
+    chrome.storage.local.get([`chat_history_${vId}`], (result) => {
+        let history = result[`chat_history_${vId}`];
+        if (history && history.length > 0) {
+            // Limpa a mensagem padrão
+            document.getElementById('vrag-chat-area').innerHTML = '';
+            
+            // Re-renderiza o histórico
+            history.forEach(msg => {
+                addMessage(msg.text, msg.sender, msg.timeText, false);
+            });
+            
+            // Assume que o vídeo já está processado se tem histórico
+            const btn = document.getElementById('vrag-process-btn');
+            btn.innerText = "Continuar";
+            document.getElementById('vrag-input').disabled = false;
+            document.getElementById('vrag-send-btn').disabled = false;
+            isReady = true;
+        }
+    });
 }
 
 async function startProcessing() {

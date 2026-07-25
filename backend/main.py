@@ -73,6 +73,9 @@ def process_video_task(task_id: str, url: str, video_id: str):
 
 @app.post("/process")
 async def process_video(request: ProcessRequest, background_tasks: BackgroundTasks):
+    if not (request.url.startswith("https://www.youtube.com/") or request.url.startswith("https://youtu.be/")):
+        raise HTTPException(status_code=400, detail="Somente URLs do YouTube são permitidas.")
+        
     video_id = extract_video_id(request.url)
     
     if not video_id:
