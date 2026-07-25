@@ -115,6 +115,51 @@
     font-size: 14px;
     line-height: 1.5;
     word-wrap: break-word;
+    font-weight: 400; /* Define peso normal para o texto base */
+    color: #e0e0e0; /* Suaviza o branco puro para leitura confortável */
+}
+
+/* Estilos para renderização de Markdown (marked.js) */
+.vrag-message p {
+    margin: 8px 0;
+}
+
+.vrag-message p:first-child {
+    margin-top: 0;
+}
+
+.vrag-message p:last-child {
+    margin-bottom: 0;
+}
+
+.vrag-message h1, 
+.vrag-message h2, 
+.vrag-message h3, 
+.vrag-message h4 {
+    color: #ffffff;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.vrag-message h1 { font-size: 1.4em; }
+.vrag-message h2 { font-size: 1.25em; }
+.vrag-message h3 { font-size: 1.1em; }
+
+.vrag-message ul, 
+.vrag-message ol {
+    padding-left: 24px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.vrag-message li {
+    margin-bottom: 4px;
+}
+
+.vrag-message strong, .vrag-message b {
+    color: #ffffff;
+    font-weight: 700;
 }
 
 .vrag-message.user {

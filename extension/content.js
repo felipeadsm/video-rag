@@ -129,6 +129,7 @@ function loadChatHistory() {
             });
             
             // Assume que o vídeo já está processado se tem histórico
+            currentVideoId = vId; // Faltava preencher essa variável após o F5!
             const btn = document.getElementById('vrag-process-btn');
             btn.innerText = "Continuar";
             document.getElementById('vrag-input').disabled = false;
