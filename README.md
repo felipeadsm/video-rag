@@ -27,6 +27,60 @@ O produto é fortemente desacoplado, separando a fluidez do frontend do processa
 4. **Speech-to-Text Preciso:** O `faster-whisper` traduz o áudio em texto estruturado com marcações de *timestamps* milimétricas (agrupadas inteligentemente em *chunks* de 30 segundos para otimizar a IA).
 5. **Cérebro RAG:** O texto mapeado é vetorizado e gravado em um volume persistente do **ChromaDB**. O framework **LangChain** se conecta ao LLM via **Ollama**.
 
+### 🧩 Fluxo de Funcionamento (Arquitetura)
+
+```mermaid
+flowchart TD
+    subgraph Client [Navegador Chrome/Edge]
+        Y[YouTube Video] --> |Extensão UI| E[Video RAG Tutor]
+    end
+
+    subgraph Docker [Docker Environment]
+        subgraph Engine [Engine Orquestrador - FastAPI]
+            API[API Endpoints]
+            W[Background Workers]
+            
+            subgraph Pipeline [Ingestão & Processamento]
+                YTDLP[yt-dlp: Extração de Áudio]
+                WHISPER[faster-whisper: Transcrição 30s Chunks]
+                EMBED[Sentence-Transformers: Vectorização]
+            end
+            
+            subgraph RAG [Retrieval & LLM]
+                RETRIEVER[Busca Semântica: Global vs Temporal]
+                LANGCHAIN[LangChain Wrapper]
+            end
+        end
+
+        DB[(ChromaDB)]
+        OLLAMA[Ollama LLM]
+    end
+
+    %% Ingestion Flow
+    E -- 1. Iniciar Processamento --> API
+    API --> W
+    W --> YTDLP
+    YTDLP --> WHISPER
+    WHISPER --> EMBED
+    EMBED --> DB
+
+    %% Chat Flow
+    E -- 2. Pergunta + Tempo Atual + Modelo --> API
+    API --> RETRIEVER
+    RETRIEVER <--> DB
+    RETRIEVER --> LANGCHAIN
+    LANGCHAIN <--> OLLAMA
+    LANGCHAIN -- 3. Resposta Gerada --> E
+
+    classDef extension fill:#0f0f0f,stroke:#00f2fe,stroke-width:2px,color:#fff;
+    classDef engine fill:#1f2937,stroke:#ff0050,stroke-width:2px,color:#fff;
+    classDef llm fill:#047857,stroke:#10b981,stroke-width:2px,color:#fff;
+    
+    class E extension;
+    class Engine engine;
+    class OLLAMA,DB llm;
+```
+
 ---
 
 ## 🛠️ Instalação e Uso
