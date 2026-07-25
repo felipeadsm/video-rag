@@ -1,11 +1,21 @@
 import os
 import chromadb
+from chromadb.utils import embedding_functions
+
+# Forçamos o HuggingFace a salvar o modelo de embeddings baixado dentro da pasta chromadata
+# Como ela é um volume persistente do Docker, ele nunca vai precisar baixar de novo!
+os.environ["HF_HOME"] = "/app/chromadata/.cache"
 
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
 # Inicializa o ChromaDB com persistência na pasta do volume Docker
 chroma_client = chromadb.PersistentClient(path="/app/chromadata")
+
+# Criamos a função de embedding customizada multilíngue (perfeita para Português)
+embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+    model_name="paraphrase-multilingual-MiniLM-L12-v2"
+)
 
 # Inicializa o LLM via Ollama. 
 # O base_url é configurado via var de ambiente no docker-compose (apontando pro container do ollama)
@@ -17,7 +27,10 @@ def add_to_vector_db(video_id: str, segments: list):
     Armazena os segmentos transcritos no banco de dados vetorial (ChromaDB).
     Os timestamps são salvos como metadados associados a cada bloco de texto.
     """
-    collection = chroma_client.get_or_create_collection(name=f"video_{video_id}")
+    collection = chroma_client.get_or_create_collection(
+        name=f"video_{video_id}",
+        embedding_function=embedding_function
+    )
     
     documents = []
     metadatas = []
@@ -29,8 +42,6 @@ def add_to_vector_db(video_id: str, segments: list):
         ids.append(f"seg_{i}")
         
     if documents:
-        # O Chroma baixa automaticamente um modelo leve de embeddings (all-MiniLM-L6-v2) 
-        # para vetorizar os documentos caso nenhum embedding_function específico seja passado.
         collection.add(
             documents=documents,
             metadatas=metadatas,
@@ -40,7 +51,10 @@ def add_to_vector_db(video_id: str, segments: list):
 def is_video_processed(video_id: str) -> bool:
     """Verifica se o vídeo já foi indexado no banco vetorial."""
     try:
-        collection = chroma_client.get_collection(name=f"video_{video_id}")
+        collection = chroma_client.get_collection(
+            name=f"video_{video_id}",
+            embedding_function=embedding_function
+        )
         return collection.count() > 0
     except Exception:
         return False
@@ -51,7 +65,10 @@ def query_rag(video_id: str, query: str, current_time: float | None = None) -> s
     Implementa a lógica do "Durante" (Sliding Window) vs "Depois" (Busca Global).
     """
     try:
-        collection = chroma_client.get_collection(name=f"video_{video_id}")
+        collection = chroma_client.get_collection(
+            name=f"video_{video_id}",
+            embedding_function=embedding_function
+        )
     except Exception:
         return "Desculpe, não encontrei a base de dados para este vídeo. O processamento já terminou?"
     

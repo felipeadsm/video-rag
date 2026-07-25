@@ -1,5 +1,6 @@
 import os
 import uuid
+import time
 
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,18 +45,26 @@ def process_video_task(task_id: str, url: str, video_id: str):
     try:
         print(f"[⬇️ DOWNLOAD] Baixando áudio do YouTube...")
         processing_status[task_id] = {"status": "downloading", "video_id": video_id}
+        t0 = time.perf_counter()
         audio_path, _ = download_audio(url)
-        print(f"[✅ DOWNLOAD] Download concluído: {audio_path}")
+        t1 = time.perf_counter()
+        print(f"[✅ DOWNLOAD] Download concluído: {audio_path} em {t1 - t0:.2f}s")
         
         print(f"[🎙️ WHISPER] Iniciando transcrição de áudio...")
         processing_status[task_id] = {"status": "transcribing", "video_id": video_id}
+        
+        t0_whisper = time.perf_counter()
         segments = transcribe_audio(audio_path)
-        print(f"[✅ WHISPER] Transcrição concluída! Segmentos gerados: {len(segments)}")
+        t1_whisper = time.perf_counter()
+        print(f"[✅ WHISPER] Transcrição concluída! Segmentos gerados: {len(segments)} em {t1_whisper - t0_whisper:.2f}s")
         
         print(f"[🧠 VECTOR DB] Iniciando indexação no ChromaDB...")
         processing_status[task_id] = {"status": "vectorizing", "video_id": video_id}
+        
+        t0_vector = time.perf_counter()
         add_to_vector_db(video_id, segments)
-        print(f"[✅ VECTOR DB] Indexação concluída para o vídeo {video_id}!")
+        t1_vector = time.perf_counter()
+        print(f"[✅ VECTOR DB] Indexação concluída para o vídeo {video_id} em {t1_vector - t0_vector:.2f}s!")
         
         # Limpeza do arquivo de áudio temporário após a indexação
         if os.path.exists(audio_path):
