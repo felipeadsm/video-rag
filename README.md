@@ -22,7 +22,7 @@
 O produto é fortemente desacoplado, separando a fluidez do frontend do processamento pesado.
 
 1. **Extensão (Chrome/Edge):** HTML/CSS/JS nativo e ultraleve manipulando a DOM dinamicamente.
-2. **Backend Orquestrador:** API assíncrona robusta construída em **FastAPI**, com middlewares de CORS e tratamento de corrida de processamento de GPU (`threading.Lock`).
+2. **Engine Orquestrador:** API assíncrona robusta construída em **FastAPI**, com middlewares de CORS e tratamento de corrida de processamento de GPU (`threading.Lock`).
 3. **Ingestão Leve:** Utilização do `yt-dlp` para baixar exclusivamente a faixa de áudio otimizada.
 4. **Speech-to-Text Preciso:** O `faster-whisper` traduz o áudio em texto estruturado com marcações de *timestamps* milimétricas (agrupadas inteligentemente em *chunks* de 30 segundos para otimizar a IA).
 5. **Cérebro RAG:** O texto mapeado é vetorizado e gravado em um volume persistente do **ChromaDB**. O framework **LangChain** se conecta ao LLM via **Ollama**.

@@ -1,12 +1,12 @@
 services:
   api:
     build: 
-      context: ./backend
+      context: ./engine
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
+      - ./engine:/app
       - chromadata:/app/chromadata
     environment:
       - OLLAMA_HOST=http://ollama:11434
